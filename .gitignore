@@ -1,8 +1,11 @@
-# 忽略编译输出
-obj/
+# 忽略 obj 目录内容，但不忽略目录本身
+obj/*
+!obj/.gitkeep
+
+# 忽略通用编译输出
 *.o
 *.o.d
 
-# 但允许保留空目录的 .gitkeep 文件
-!obj/.gitkeep
+# 保留 modules 下的占位文件
 !modules/.gitkeep
+

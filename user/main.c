@@ -2,13 +2,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-/** @addtogroup STM32H5xx_HAL_Examples
-  * @{
-  */
-
-/** @addtogroup Templates
-  * @{
-  */
+#include "bsp_led.h"
+#include "spi_lcd.h"
+#include "draw.h"
+#include "bsp_lcd.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -17,9 +14,31 @@
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 
-static void Error_Handler(void);
+
 
 /* Private functions ---------------------------------------------------------*/
+void MX_ICACHE_Init(void)
+{
+
+  /* USER CODE BEGIN ICACHE_Init 0 */
+
+  /* USER CODE END ICACHE_Init 0 */
+
+  /* USER CODE BEGIN ICACHE_Init 1 */
+
+  /* USER CODE END ICACHE_Init 1 */
+
+  /** Enable instruction cache (default 2-ways set associative cache)
+  */
+  if (HAL_ICACHE_Enable() != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ICACHE_Init 2 */
+
+  /* USER CODE END ICACHE_Init 2 */
+
+}
 
 /**
   * @brief  Main program
@@ -35,12 +54,25 @@ int main(void)
 
   /* Add your application code here
      */
+  bsp_led_init();
+  bsp_lcd_init();
+  MX_SPI2_Init();
+  MX_ICACHE_Init();
+
+  LCD_Init(1);
+  Draw_Init();
+  Draw_Clear(0);
+
+
+  bsp_test_lcd();
+
 
   /* Infinite loop */
   while (1)
   {
+	bsp_led_toggle();
 
-    HAL_Delay(250);
+    HAL_Delay(200);
   }
 }
 
@@ -103,7 +135,7 @@ static void SystemClock_Config(void)
   * @param  None
   * @retval None
   */
-static void Error_Handler(void)
+void Error_Handler(void)
 {
   /* User may add here some code to deal with this error */
   while(1)

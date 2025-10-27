@@ -41,12 +41,14 @@ INCDIRS := stlib/cminc \
             stlib/inc \
             stlib \
             user \
-            modules 
+            modules/led \
+            modules/lcd
 
 SRCDIRS := stlib \
             stlib/src \
             user \
-            modules 
+            modules/led \
+            modules/lcd
 
 VPATH := $(SRCDIRS) $(INCDIRS) 
 

@@ -1,3 +1,8 @@
+# 忽略编译输出
 obj/
 *.o
 *.o.d
+
+# 但允许保留空目录的 .gitkeep 文件
+!obj/.gitkeep
+!modules/.gitkeep

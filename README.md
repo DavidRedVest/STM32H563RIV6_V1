@@ -24,6 +24,8 @@
 
 - 增加rt_printf功能，可以绑定UART2和UART4，支持浮点数
 
+- 增加FreeRTOS，实现基本功能
+
   
 
   

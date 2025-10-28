@@ -1,5 +1,8 @@
 #include "bsp_uart.h"
 
+#include "device_manager.h"
+
+
 #define UART_RX_BUF_LEN (200)
 
 UART_HandleTypeDef huart4;
@@ -9,6 +12,8 @@ DMA_HandleTypeDef handle_GPDMA1_Channel3;
 DMA_HandleTypeDef handle_GPDMA1_Channel1;
 DMA_HandleTypeDef handle_GPDMA1_Channel2;
 DMA_HandleTypeDef handle_GPDMA1_Channel0;
+
+
 
 
 /* UART4 init function */
@@ -392,5 +397,15 @@ void myputstr(const char *str)
 
 }
 #endif
+
+
+/*******************************************************************************************/
+//下面是封装串口的代码,需要和FreeRTOS做结合
+/*******************************************************************************************/
+
+
+
+//Dev_Mgmt g_uart2_dev = {"uart2", UART_Rx_Start, UART_Send, UART_GetData, UART_Flush, &g_uart2_data};
+//Dev_Mgmt g_uart4_dev = {"uart4", UART_Rx_Start, UART_Send, UART_GetData, UART_Flush, &g_uart4_data};
 
 

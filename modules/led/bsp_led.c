@@ -41,7 +41,7 @@ void bsp_test_init()
 	__HAL_RCC_GPIOH_CLK_ENABLE();	
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	
-	/*Configure GPIO pin : PC12 */
+	/*Configure GPIO pin : PB0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

@@ -28,6 +28,7 @@ extern DMA_HandleTypeDef handle_GPDMA1_Channel2;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart2;
+extern TIM_HandleTypeDef htim6;
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -101,6 +102,7 @@ void UsageFault_Handler(void)
   }
 }
 
+#if 1
 /**
   * @brief  This function handles SVCall exception.
   * @param  None
@@ -109,6 +111,7 @@ void UsageFault_Handler(void)
 void SVC_Handler(void)
 {
 }
+#endif
 
 /**
   * @brief  This function handles Debug Monitor exception.
@@ -122,6 +125,7 @@ void DebugMon_Handler(void)
   }
 }
 
+#if 1
 /**
   * @brief  This function handles PendSVC exception.
   * @param  None
@@ -133,7 +137,9 @@ void PendSV_Handler(void)
   {
   }
 }
+#endif
 
+#if 1
 /**
   * @brief  This function handles SysTick Handler.
   * @param  None
@@ -141,9 +147,9 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  HAL_IncTick();
+  //HAL_IncTick();
 }
-
+#endif
 /******************************************************************************/
 /*                 STM32H5xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
@@ -207,6 +213,18 @@ void GPDMA1_Channel3_IRQHandler(void)
 
   /* USER CODE END GPDMA1_Channel3_IRQn 1 */
 }
+
+void TIM6_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM6_IRQn 0 */
+
+  /* USER CODE END TIM6_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim6);
+  /* USER CODE BEGIN TIM6_IRQn 1 */
+
+  /* USER CODE END TIM6_IRQn 1 */
+}
+
 
 /**
   * @brief This function handles USART2 global interrupt.

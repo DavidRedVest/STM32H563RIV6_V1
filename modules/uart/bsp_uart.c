@@ -1,6 +1,10 @@
 #include "bsp_uart.h"
 
 #include "device_manager.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 
 #define UART_RX_BUF_LEN (200)
@@ -13,7 +17,25 @@ DMA_HandleTypeDef handle_GPDMA1_Channel1;
 DMA_HandleTypeDef handle_GPDMA1_Channel2;
 DMA_HandleTypeDef handle_GPDMA1_Channel0;
 
+typedef struct UART_Data{
+	UART_HandleTypeDef *huart;
+	QueueHandle_t rxQueue;
+	SemaphoreHandle_t txSemaphore;
+	uint8_t rx_buf[UART_RX_BUF_LEN];
+}UART_Data, *PUART_Data;
 
+static UART_Data g_uart2_data = {
+	.huart = &huart2,
+	.rxQueue = NULL,
+	.txSemaphore = NULL,
+	.rx_buf = {0},
+};
+static UART_Data g_uart4_data = {
+	.huart = &huart4,
+	.rxQueue = NULL,
+	.txSemaphore = NULL,
+	.rx_buf = {0},
+};	
 
 
 /* UART4 init function */
@@ -352,21 +374,87 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-
+	PUART_Data pdata;
+	if( &huart2 == huart ) {
+		pdata = &g_uart2_data;
+	}
+	if(&huart4 == huart) {
+		pdata = &g_uart4_data;
+	}
+	xSemaphoreGiveFromISR(pdata->txSemaphore, NULL);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-
+	PUART_Data pdata;
+    
+	if (huart == &huart2)
+	{
+        pdata = &g_uart2_data;
+	}
+	if (huart == &huart4)
+	{
+        pdata = &g_uart4_data;
+	}
+	/* write queue : g_uart4_rx_buf 100 bytes ==> queue */
+	for (int i = 0; i < UART_RX_BUF_LEN; i++)
+	{
+		xQueueSendFromISR(pdata->rxQueue, (const void *)&pdata->rx_buf[i], NULL);
+	}	
+	
+	/* re-start DMA+IDLE rx */
+	HAL_UARTEx_ReceiveToIdle_DMA(pdata->huart, pdata->rx_buf, UART_RX_BUF_LEN);
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
+	PUART_Data pdata;
+	static  uint16_t old_pos = 0;
+		
+	if (huart == &huart2)
+	{
+		pdata = &g_uart2_data;
+	}
+	if (huart == &huart4)
+	{
+		pdata = &g_uart4_data;
+	}
+	/* write queue : g_uart4_rx_buf Size bytes ==> queue */
+	for (int i = old_pos; i < Size; i++)
+	{
+		xQueueSendFromISR(pdata->rxQueue, (const void *)&pdata->rx_buf[i], NULL);
+	}
+
+	old_pos = Size;
+
+	if (HAL_UART_RXEVENT_HT != huart->RxEventType)
+	{
+		old_pos = 0;
+		
+		/* re-start DMA+IDLE rx */
+		HAL_UARTEx_ReceiveToIdle_DMA(pdata->huart, pdata->rx_buf, UART_RX_BUF_LEN);
+	}
 
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
+	PUART_Data pdata;
+		
+	if (huart == &huart2)
+	{
+		pdata = &g_uart2_data;
+	}
+	if (huart == &huart4)
+	{
+		pdata = &g_uart4_data;
+	}
+
+	HAL_UART_DeInit(pdata->huart);
+	HAL_UART_Init(pdata->huart);
+	
+	/* re-start DMA+IDLE rx */
+	HAL_UARTEx_ReceiveToIdle_DMA(pdata->huart, pdata->rx_buf, UART_RX_BUF_LEN);
 
 }
 
@@ -403,9 +491,55 @@ void myputstr(const char *str)
 //下面是封装串口的代码,需要和FreeRTOS做结合
 /*******************************************************************************************/
 
+int UART_Rx_Start(struct Dev_Mgmt *pDev, int baud, char parity, int data_bit, int stop_bit)
+{
+	PUART_Data pdata = pDev->priv_data;
+	if(!pdata->rxQueue) {
+		pdata->rxQueue = xQueueCreate(UART_RX_BUF_LEN, 1);
+		pdata->txSemaphore = xSemaphoreCreateBinary();
+		HAL_UARTEx_ReceiveToIdle_DMA(pdata->huart, pdata->rx_buf, UART_RX_BUF_LEN);
+	}
+	return 0;
+}
+int UART_Send(struct Dev_Mgmt *pDev, uint8_t *datas, uint32_t len, int timeout)
+{
+	PUART_Data pdata = pDev->priv_data;
+	HAL_UART_Transmit_DMA(pdata->huart, datas, len);
+	
+	if (pdTRUE == xSemaphoreTake(pdata->txSemaphore, timeout))
+		return 0;
+	else
+		return -1;
+}
+int UART_GetData(struct Dev_Mgmt *pDev, uint8_t *data, int timeout)
+{
+	PUART_Data pdata = pDev->priv_data;
+		
+	if (pdPASS == xQueueReceive(pdata->rxQueue, data, timeout))
+		return 0;
+	else
+		return -1;
+
+}
+int UART_Flush(struct Dev_Mgmt *pDev)
+{
+	PUART_Data pdata = pDev->priv_data;
+		
+	int cnt = 0;
+	uint8_t data;
+	
+	while (1)
+	{
+		if (pdPASS != xQueueReceive(pdata->rxQueue, &data, 0))
+			break;
+		cnt++;
+	}
+	return cnt;
+}
 
 
-//Dev_Mgmt g_uart2_dev = {"uart2", UART_Rx_Start, UART_Send, UART_GetData, UART_Flush, &g_uart2_data};
-//Dev_Mgmt g_uart4_dev = {"uart4", UART_Rx_Start, UART_Send, UART_GetData, UART_Flush, &g_uart4_data};
+
+Dev_Mgmt g_uart2_dev = {"uart2", UART_Rx_Start, UART_Send, UART_GetData, UART_Flush, &g_uart2_data};
+Dev_Mgmt g_uart4_dev = {"uart4", UART_Rx_Start, UART_Send, UART_GetData, UART_Flush, &g_uart4_data};
 
 

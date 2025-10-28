@@ -39,7 +39,7 @@ typedef enum
 } lcd_display_rotation_t;
 
 //是否使用FreeRTOS
-//#define FERRRTOS_FLAG (1)
+#define FERRRTOS_FLAG (1)
 
 /**********************************************************************
  * 函数名称： LCD_WriteDatas

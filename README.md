@@ -26,6 +26,10 @@
 
 - 增加FreeRTOS，实现基本功能
 
-  
+- 测试UART封装，注意FreeRTOSConfig.h文件中的configTOTAL_HEAP_SIZE参数，设置小了会导致堆空间用尽，然后任务创建失败
 
-  
+  ```C
+  #define configTOTAL_HEAP_SIZE                        ( ( size_t ) ( 20 * 1024 ) )
+  ```
+
+- FreeRTOS启动之后，使用vTaskDelay函数，不要使用HAL_Delay

@@ -80,7 +80,7 @@ int main(void)
   Draw_Clear(0);
 
 
-  rt_kprintf("Hello World! \r\n");
+//  rt_kprintf("Hello World! \r\n");
 
   MX_FREERTOS_Init();
 

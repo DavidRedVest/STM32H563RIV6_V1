@@ -6,6 +6,9 @@
 #include "spi_lcd.h"
 #include "draw.h"
 #include "bsp_lcd.h"
+#include "bsp_uart.h"
+#include "rtthread.h"
+#include "gpdma.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -48,6 +51,9 @@ void MX_ICACHE_Init(void)
 int main(void)
 {
 
+	uint8_t c = 0;
+	float sum = 3.141592654;
+
   HAL_Init();
 
   SystemClock_Config();
@@ -58,7 +64,11 @@ int main(void)
   bsp_lcd_init();
   MX_SPI2_Init();
   MX_ICACHE_Init();
+  MX_GPDMA1_Init();
+  MX_USART2_UART_Init();
+  MX_UART4_Init();
 
+  //init lcd function
   LCD_Init(1);
   Draw_Init();
   Draw_Clear(0);
@@ -66,13 +76,19 @@ int main(void)
 
   bsp_test_lcd();
 
+  rt_kprintf("Hello World! \r\n");
 
   /* Infinite loop */
   while (1)
   {
 	bsp_led_toggle();
+	
+	HAL_UART_Transmit_DMA(&huart2, &c, 1);
+	HAL_UART_Transmit_DMA(&huart4, &c, 1);
+	rt_kprintf("UART CNT:%d %lf\r\n",c,sum);
 
-    HAL_Delay(200);
+    HAL_Delay(500);
+	c++;
   }
 }
 

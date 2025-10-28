@@ -7,8 +7,13 @@
 #include "draw.h"
 #include "bsp_lcd.h"
 #include "bsp_uart.h"
-#include "rtthread.h"
+
 #include "gpdma.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -16,6 +21,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 
 
 
@@ -74,13 +80,16 @@ int main(void)
   Draw_Clear(0);
 
 
-  bsp_test_lcd();
-
   rt_kprintf("Hello World! \r\n");
+
+  MX_FREERTOS_Init();
+
+  vTaskStartScheduler();
 
   /* Infinite loop */
   while (1)
   {
+  	//不会运行到此处
 	bsp_led_toggle();
 	
 	HAL_UART_Transmit_DMA(&huart2, &c, 1);

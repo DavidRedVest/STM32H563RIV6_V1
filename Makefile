@@ -19,6 +19,13 @@ DEFS := -DUSE_HAL_DRIVER -DSTM32H563xx -DHSE_VALUE=25000000U -DHSI_VALUE=2500000
 TARGET := firmware
 LINKER := stlib/STM32H563xx_FLASH.ld
 
+FREERTOS_INC := middlewares/freertos middlewares/freertos/include 
+FREERTOS_INC += middlewares/freertos/portable/GCC/ARM_CM33_NTZ/non_secure
+
+FREERTOS_SRC := middlewares/freertos 
+FREERTOS_SRC += middlewares/freertos/portable/GCC/ARM_CM33_NTZ/non_secure
+FREERTOS_SRC += middlewares/freertos/portable/MemMang
+
 #设置编译参数和编译选项
 CFLAGS := -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -std=c11 -ffunction-sections -fdata-sections 
 #-O2表示开启优化，-Og便于调试，-g3启用最高等级调试信息（配合GDB使用）
@@ -43,14 +50,16 @@ INCDIRS := stlib/cminc \
             user \
             modules/led \
             modules/lcd \
-            modules/uart
-
+            modules/uart \
+			$(FREERTOS_INC)
+			
 SRCDIRS := stlib \
             stlib/src \
             user \
             modules/led \
             modules/lcd \
-            modules/uart
+            modules/uart \
+            $(FREERTOS_SRC)
 
 VPATH := $(SRCDIRS) $(INCDIRS) 
 

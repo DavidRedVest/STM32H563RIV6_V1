@@ -7,6 +7,7 @@
 #include "draw.h"
 #include "bsp_lcd.h"
 #include "bsp_uart.h"
+#include "bsp_usb.h"
 
 #include "gpdma.h"
 
@@ -23,7 +24,7 @@
 static void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 
-
+//extern void MX_USBX_Device_Init(void);
 
 /* Private functions ---------------------------------------------------------*/
 void MX_ICACHE_Init(void)
@@ -57,8 +58,8 @@ void MX_ICACHE_Init(void)
 int main(void)
 {
 
-	uint8_t c = 0;
-	float sum = 3.141592654;
+//	uint8_t c = 0;
+	//float sum = 3.141592654;
 
   HAL_Init();
 
@@ -73,6 +74,10 @@ int main(void)
   MX_GPDMA1_Init();
   MX_USART2_UART_Init();
   MX_UART4_Init();
+  MX_USB_PCD_Init();
+  
+  /* 初始化 USBX 栈 */
+  //MX_USBX_Device_Init();
 
   //init lcd function
   LCD_Init(1);
@@ -80,7 +85,7 @@ int main(void)
   Draw_Clear(0);
 
 
-//  rt_kprintf("Hello World! \r\n");
+  rt_kprintf("Hello World! \r\n");
 
   MX_FREERTOS_Init();
 
@@ -90,14 +95,6 @@ int main(void)
   while (1)
   {
   	//不会运行到此处
-	bsp_led_toggle();
-	
-	HAL_UART_Transmit_DMA(&huart2, &c, 1);
-	HAL_UART_Transmit_DMA(&huart4, &c, 1);
-	rt_kprintf("UART CNT:%d %lf\r\n",c,sum);
-
-    HAL_Delay(500);
-	c++;
   }
 }
 
@@ -208,6 +205,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   /* USER CODE END Callback 1 */
 }
+
+
+
 
 
 

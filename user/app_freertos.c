@@ -10,10 +10,12 @@
 #include "draw.h"
 #include <stdio.h>
 
+#include "ux_api.h"
 
 static void StartDefaultTask(void *argument);
-static void SPILCDTask(void *argument);
+//static void SPILCDTask(void *argument);
 
+extern void USBX_CDC_Task(void *argument);
 
 //栈溢出检测钩子函数
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
@@ -26,7 +28,37 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
     while(1);
 }
 
+#if 0
+extern UX_SLAVE_CLASS_CDC_ACM *cdc_acm_instance;
 
+void USBX_CDC_Task(void *argument)
+{
+    UCHAR buffer[128];
+    ULONG actual_length;
+
+  //  printf("USBX CDC Task started.\r\n");
+
+    while (1)
+    {
+        if (usb_cdc_read(buffer, sizeof(buffer), &actual_length) == UX_SUCCESS)
+        {
+            if (actual_length > 0)
+            {
+                /* 回显 */
+                usb_cdc_write(buffer, actual_length);
+
+                /* 控制台输出调试信息 */
+                buffer[actual_length] = '\0';
+                printf("[USB RX] %s\r\n", buffer);
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+#endif
+
+#if 0
 static void CH1_UART2_TxTaskFunction( void *pvParameters )	
 {	
 		uint8_t c = 0;
@@ -71,6 +103,19 @@ static void CH2_UART4_RxTaskFunction( void *pvParameters )
 			}
 		}
 }
+#endif
+
+
+void USBX_Core_Task(void *argument)
+{
+
+	while(1)
+	{
+		ux_system_tasks_run();			  // ★ Standalone 必须周期驱动
+		//vTaskDelay(pdMS_TO_TICKS(1));	  // 1~5ms 皆可
+
+	}
+}
 
 
 void MX_FREERTOS_Init(void) {
@@ -90,7 +135,7 @@ void MX_FREERTOS_Init(void) {
 	    Draw_String(0, 0, "StartDefaultTask failed!", 0x0000ff00, 0);
 		Error_Handler();
 	}
-
+#if 0
 	ret = xTaskCreate(
 	  SPILCDTask,
 	  "SPILCDTask",
@@ -133,6 +178,29 @@ void MX_FREERTOS_Init(void) {
 		Draw_String(0, 0, "CH2_UART4_RxTaskFunction failed!", 0x0000ff00, 0);
 		Error_Handler();
 	}
+#endif
+#if 0
+	ret = xTaskCreate(
+			USBX_CDC_Task,
+			"USBX_CDC_Task",
+			1024,
+			NULL,
+			configMAX_PRIORITIES - 1,
+			NULL);	
+		if (ret != pdPASS)
+		{
+			rt_kprintf("USBX_CDC_Task failed! \r\n");
+			Draw_String(0, 0, "USBX_CDC_Task failed!", 0x0000ff00, 0);
+			Error_Handler();
+		} 
+#endif
+		ret = xTaskCreate(
+			USBX_Core_Task,
+			"USBX_Core_Task",
+			512,
+			NULL,
+			configMAX_PRIORITIES - 2,
+			NULL);
 
 }
 
@@ -145,6 +213,7 @@ void StartDefaultTask(void *argument)
 	}
 }
 
+#if 0
 void SPILCDTask(void *argument)
 {
 
@@ -153,6 +222,6 @@ void SPILCDTask(void *argument)
 		vTaskDelay(500);
 	}	
 }
-
+#endif
 
 

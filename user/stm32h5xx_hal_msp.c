@@ -48,6 +48,7 @@ void HAL_MspInit(void)
   /* NOTE : This function is generated automatically by STM32CubeMX and eventually
             modified by the user
    */
+   HAL_NVIC_SetPriority(PendSV_IRQn, 15, 0);
 }
 
 /**

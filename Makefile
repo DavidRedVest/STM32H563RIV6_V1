@@ -14,17 +14,27 @@ SIZE    =$(CROSS_COMPILE)size
 #DEFS := -DUSE_STDPERIPH_DRIVER 
 #HAL库全局变量定义
 DEFS := -DUSE_HAL_DRIVER -DSTM32H563xx -DHSE_VALUE=25000000U -DHSI_VALUE=25000000U
-#-DSTM32F429_439xx  
+DEFS += -DUX_INCLUDE_USER_DEFINE_FILE
+#DEFS += -DUX_DEVICE_SIDE_ONLY -DUX_STANDALONE -DUX_INCLUDE_USER_DEFINE_FILE
 
 TARGET := firmware
 LINKER := stlib/STM32H563xx_FLASH.ld
 
+# user FreeRTOS code path
 FREERTOS_INC := middlewares/freertos middlewares/freertos/include 
 FREERTOS_INC += middlewares/freertos/portable/GCC/ARM_CM33_NTZ/non_secure
-
 FREERTOS_SRC := middlewares/freertos 
 FREERTOS_SRC += middlewares/freertos/portable/GCC/ARM_CM33_NTZ/non_secure
 FREERTOS_SRC += middlewares/freertos/portable/MemMang
+
+# user USBX code path
+USBX_INC := middlewares/usbx/common/core/inc 
+USBX_INC += middlewares/usbx/common/usbx_device_classes/inc 
+USBX_INC += middlewares/usbx/common/usbx_stm32_device_controllers middlewares/usbx/app
+USBX_INC += middlewares/usbx/ports/cortex_m33/gnu/inc 
+USBX_SRC := middlewares/usbx/common/core/src 
+USBX_SRC += middlewares/usbx/common/usbx_device_classes/src 
+USBX_SRC += middlewares/usbx/common/usbx_stm32_device_controllers middlewares/usbx/app
 
 #设置编译参数和编译选项
 CFLAGS := -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -std=c11 -ffunction-sections -fdata-sections 
@@ -51,7 +61,9 @@ INCDIRS := stlib/cminc \
             modules/led \
             modules/lcd \
             modules/uart \
-			$(FREERTOS_INC)
+            modules/usb \
+			$(FREERTOS_INC) \
+			$(USBX_INC)
 			
 SRCDIRS := stlib \
             stlib/src \
@@ -59,7 +71,9 @@ SRCDIRS := stlib \
             modules/led \
             modules/lcd \
             modules/uart \
-            $(FREERTOS_SRC)
+            modules/usb \
+            $(FREERTOS_SRC) \
+            $(USBX_SRC)
 
 VPATH := $(SRCDIRS) $(INCDIRS) 
 

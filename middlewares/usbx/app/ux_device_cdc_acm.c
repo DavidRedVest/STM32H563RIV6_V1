@@ -28,6 +28,9 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include "device_manager.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -350,5 +353,56 @@ int ux_device_cdc_acm_getchar(uint8_t *pData, uint32_t timeout)
 	}
 }
 
+int ux_device_cdc_acm_flush(void)
+{
+	int cnt = 0;
+	uint8_t data;
+	while (1)
+	{
+		if (pdPASS != xQueueReceive(g_xUSBUART_RX_Queue, &data, 0))
+			break;
+		cnt++;
+	}
+	return cnt;
+}
+
+#if 1
+ /* 为了实现printf打印，需要实现一个myputstr函数 */
+void myputstr(const char *str)
+{
+#if 0
+	while(*str) {
+			ux_device_cdc_acm_send((unsigned char *)str,1, 100);
+			str++;
+		}
+#endif
+	ux_device_cdc_acm_send((unsigned char *)str,strlen(str), 100);
+}
+#endif
+
+
+/********************************************************************************************************/
+//封装更好的接口
+/********************************************************************************************************/
+
+static int USBSerial_Init(struct Dev_Mgmt *pDev, int baud, char parity, int data_bit, int stop_bit)
+{
+	//nothing
+	return 0;
+}
+static int USBSerial_Send(struct Dev_Mgmt *pDev, uint8_t *datas, uint32_t len, int timeout)
+{
+	return ux_device_cdc_acm_send(datas, len, timeout);
+}
+static int USBSerial_GetData(struct Dev_Mgmt *pDev, uint8_t *data, int timeout)
+{
+	return ux_device_cdc_acm_getchar(data, timeout);
+}
+static int USBSerial_Flush(struct Dev_Mgmt *pDev)
+{
+	return ux_device_cdc_acm_flush();
+}
+
+Dev_Mgmt g_usbserial_dev = {"usb",USBSerial_Init, USBSerial_Send, USBSerial_GetData, USBSerial_Flush,NULL}; 
 
 /* USER CODE END 1 */

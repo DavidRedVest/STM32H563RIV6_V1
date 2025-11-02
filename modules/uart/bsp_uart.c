@@ -458,7 +458,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 
 }
 
-#if 1
+#if 0
  /* 为了实现printf打印，需要实现一个myputstr函数 */
 static int myputchar(const char ch)
 {

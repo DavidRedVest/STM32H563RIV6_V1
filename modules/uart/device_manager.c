@@ -5,8 +5,9 @@
 
 extern struct Dev_Mgmt g_uart2_dev;
 extern struct Dev_Mgmt g_uart4_dev;
+extern struct Dev_Mgmt g_usbserial_dev;
 
-static struct Dev_Mgmt *g_uart_devices[] = {&g_uart2_dev, &g_uart4_dev};
+static struct Dev_Mgmt *g_uart_devices[] = {&g_uart2_dev, &g_uart4_dev,&g_usbserial_dev};
 
 struct Dev_Mgmt *GetUARTDevice(char *name)
 {

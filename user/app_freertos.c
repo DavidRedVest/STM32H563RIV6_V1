@@ -103,6 +103,18 @@ static void CH2_UART4_RxTaskFunction( void *pvParameters )
 			}
 		}
 }
+
+void SPILCDTask(void *argument)
+{
+	uint32_t cnt = 0;
+
+	while(1)
+	{
+		vTaskDelay(500);
+		rt_kprintf("SPILCDTask start:%d! \r\n",cnt++);
+
+	}	
+}
 #endif
 
 
@@ -112,7 +124,7 @@ void USBX_Core_Task(void *argument)
 	while(1)
 	{
 		ux_system_tasks_run();			  // ★ Standalone 必须周期驱动
-		//vTaskDelay(pdMS_TO_TICKS(1));	  // 1~5ms 皆可
+		vTaskDelay(pdMS_TO_TICKS(1));	  // 1~5ms 皆可
 
 	}
 }
@@ -150,6 +162,7 @@ void MX_FREERTOS_Init(void) {
 		Error_Handler();
 	}
 
+
 	ret = xTaskCreate(
 		CH1_UART2_TxTaskFunction,
 		"ch1_uart2_tx_task",
@@ -179,6 +192,8 @@ void MX_FREERTOS_Init(void) {
 		Error_Handler();
 	}
 #endif
+
+
 #if 0
 	ret = xTaskCreate(
 			USBX_CDC_Task,
@@ -213,15 +228,6 @@ void StartDefaultTask(void *argument)
 	}
 }
 
-#if 0
-void SPILCDTask(void *argument)
-{
 
-	while(1)
-	{
-		vTaskDelay(500);
-	}	
-}
-#endif
 
 

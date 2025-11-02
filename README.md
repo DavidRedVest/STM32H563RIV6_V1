@@ -33,3 +33,7 @@
   ```
 
 - FreeRTOS启动之后，使用vTaskDelay函数，不要使用HAL_Delay
+
+- 实现USB虚拟串口功能
+
+- 实现rt_kprintf绑定USB虚拟串口输出，不能发送单个字节，开始初始化会比较慢，最前面的输出会丢掉

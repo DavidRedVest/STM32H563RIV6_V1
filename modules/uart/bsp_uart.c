@@ -458,16 +458,16 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 
 }
 
-#if 0
+#if 1
  /* 为了实现printf打印，需要实现一个myputstr函数 */
 static int myputchar(const char ch)
 {
-#if 1
+#if 0
 //UART2测试OK
 	while((USART2->ISR&0X40)==0);//循环发送,直到发送完毕   
 	USART2->TDR = (uint8_t) ch;      
 #endif
-#if 0
+#if 1
 	//UART4测试OK
 	while((UART4->ISR&0X40)==0);//循环发送,直到发送完毕   
 	UART4->TDR = (uint8_t) ch;

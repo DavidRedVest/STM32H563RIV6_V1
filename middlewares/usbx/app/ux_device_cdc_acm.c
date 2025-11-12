@@ -366,7 +366,7 @@ int ux_device_cdc_acm_flush(void)
 	return cnt;
 }
 
-#if 1
+#if 0
  /* 为了实现printf打印，需要实现一个myputstr函数 */
 void myputstr(const char *str)
 {

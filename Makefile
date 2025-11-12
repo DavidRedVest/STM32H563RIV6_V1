@@ -17,6 +17,12 @@ DEFS := -DUSE_HAL_DRIVER -DSTM32H563xx -DHSE_VALUE=25000000U -DHSI_VALUE=2500000
 DEFS += -DUX_INCLUDE_USER_DEFINE_FILE
 #DEFS += -DUX_DEVICE_SIDE_ONLY -DUX_STANDALONE -DUX_INCLUDE_USER_DEFINE_FILE
 
+# 操作系统平台 实现跨平台malloc函数
+OS ?= FREERTOS
+
+OS_SRC_DIR = modules/osal_mem
+OS_INC_DIR = modules/osal_mem
+
 TARGET := firmware
 LINKER := stlib/STM32H563xx_FLASH.ld
 
@@ -35,6 +41,10 @@ USBX_INC += middlewares/usbx/ports/cortex_m33/gnu/inc
 USBX_SRC := middlewares/usbx/common/core/src 
 USBX_SRC += middlewares/usbx/common/usbx_device_classes/src 
 USBX_SRC += middlewares/usbx/common/usbx_stm32_device_controllers middlewares/usbx/app
+
+#use libmodbus
+MODBUS_INC := middlewares/libmodbus
+MODBUS_SRC := middlewares/libmodbus
 
 #设置编译参数和编译选项
 CFLAGS := -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -std=c11 -ffunction-sections -fdata-sections 
@@ -62,8 +72,10 @@ INCDIRS := stlib/cminc \
             modules/lcd \
             modules/uart \
             modules/usb \
+            $(OS_INC_DIR) \
 			$(FREERTOS_INC) \
-			$(USBX_INC)
+			$(USBX_INC) \
+			$(MODBUS_INC)
 			
 SRCDIRS := stlib \
             stlib/src \
@@ -73,7 +85,8 @@ SRCDIRS := stlib \
             modules/uart \
             modules/usb \
             $(FREERTOS_SRC) \
-            $(USBX_SRC)
+            $(USBX_SRC) \
+            $(MODBUS_SRC)
 
 VPATH := $(SRCDIRS) $(INCDIRS) 
 
@@ -86,6 +99,29 @@ $(shell mkdir -p obj)
 #找到.S和.c文件
 SFILES := $(foreach dir, $(SRCDIRS), $(wildcard $(dir)/*.S))
 CFILES := $(foreach dir, $(SRCDIRS), $(wildcard $(dir)/*.c))
+
+
+# === OSAL_MEM selective compilation ===
+# 移除 osal_mem 目录中的所有 c 文件（避免被自动扫描编译）
+CFILES := $(filter-out $(OS_SRC_DIR)/%.c, $(CFILES))
+
+# 根据 OS 选择一个指定源文件加入编译
+ifeq ($(OS),FREERTOS) 
+CFILES += $(OS_SRC_DIR)/osal_mem_freertos.c
+else ifeq ($(OS),RTTHREAD) 
+CFILES += $(OS_SRC_DIR)/osal_mem_rtthread.c
+else ifeq ($(OS),THREADX) 
+CFILES += $(OS_SRC_DIR)/osal_mem_threadx.c
+else ifeq ($(OS),LINUX) 
+CFILES += $(OS_SRC_DIR)/osal_mem_linux.c
+else ifeq ($(OS),MACOS) 
+CFILES += $(OS_SRC_DIR)/osal_mem_macos.c
+else
+$(error Unknown OS type! Define OS = FREERTOS/RTTHREAD/THREADX/LINUX/MACOS)
+endif
+# === end OSAL_MEM selective compilation ===
+
+
 #去掉文件的路径
 SFILENDIR := $(notdir $(SFILES))
 CFILENDIR := $(notdir $(CFILES))
@@ -100,11 +136,13 @@ DEPS := $(wildcard $(DEPS))
 
 .PHONY: all clean upload
 
-all:start_recursive_build $(TARGET)
+all:start_recursive_build $(TARGET) 
 	@echo $(TARGET) has been build!
+
 
 start_recursive_build:
 	@echo Hello
+	$(info [BUILD] Target OS = $(OS))
 #   @make -C ./ -f $(TOPDIR)/Makefile.build
 
 $(TARGET):$(OBJS)
@@ -137,7 +175,7 @@ upload:all
 	
 .PHONY:gdbserver
 gdbserver:
-	@JLinkGDBServer -device STM32F100RB -if SWD -speed 4000
+	@JLinkGDBServer -device stm32h563ri -if SWD -speed 4000
 
 
 

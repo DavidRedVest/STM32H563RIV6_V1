@@ -12,6 +12,10 @@
 
 #include "ux_api.h"
 
+#include "modbus.h"
+#include "osal_mem.h"
+#include "errno.h"
+
 static void StartDefaultTask(void *argument);
 //static void SPILCDTask(void *argument);
 
@@ -118,7 +122,7 @@ void SPILCDTask(void *argument)
 #endif
 
 
-void USBX_Core_Task(void *argument)
+static void USBX_Core_Task(void *argument)
 {
 
 	while(1)
@@ -129,11 +133,77 @@ void USBX_Core_Task(void *argument)
 	}
 }
 
+static void LibmodbusServer(void *argument)
+{
+//	rt_kprintf("start 111 \r\n");
+
+	uint8_t *query;
+	modbus_t *ctx;
+	int rc;
+	modbus_mapping_t *mb_mapping;
+
+	ctx = modbus_new_rtu("usb",115200,'N', 8, 1);
+//	rt_kprintf("start 222 \r\n");
+	modbus_set_slave(ctx, 1);
+	query = osal_malloc(MODBUS_RTU_MAX_ADU_LENGTH);
+
+	mb_mapping = modbus_mapping_new_start_address(0,10,
+		0,10,
+		0,10,
+		0,10);
+
+	memset(mb_mapping->tab_bits, 0, mb_mapping->nb_bits);
+	memset(mb_mapping->tab_registers, 0x55, mb_mapping->nb_registers * 2);
+	
+	rc = modbus_connect(ctx);
+	if(-1 == rc) {
+		modbus_free(ctx);
+		vTaskDelete(NULL);
+	}
+	//rt_kprintf("start 333 \r\n");
+
+	for(;;)
+	{
+#if 1	
+		do {
+//			rt_kprintf("start ready \r\n");
+			rc = modbus_receive(ctx, query);
+		}while(0 == rc);
+
+		if( -1 == rc && errno != EMBBADCRC ) {
+			continue;
+		}
+		//rt_kprintf("start 444 \r\n");
+
+		rc = modbus_reply(ctx, query, rc, mb_mapping);
+		if(-1 == rc) {
+			//break;
+		}
+		//rt_kprintf("start 555 \r\n");
+
+		/* 测试功能，实现电灯 */
+		if (mb_mapping->tab_bits[0]) {
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);
+		} else {
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_SET);
+		}
+#endif		
+		vTaskDelay(100);
+
+	}
+
+	modbus_mapping_free(mb_mapping);
+	osal_free(query);
+	/*for rtu*/
+	modbus_close(ctx);
+	modbus_free(ctx);
+	vTaskDelete(NULL);
+}
 
 void MX_FREERTOS_Init(void) {
 
 	BaseType_t ret;
-
+#if 0
 	ret = xTaskCreate(
 	  StartDefaultTask,
 	  "StartDefaultTask",
@@ -147,6 +217,8 @@ void MX_FREERTOS_Init(void) {
 	    Draw_String(0, 0, "StartDefaultTask failed!", 0x0000ff00, 0);
 		Error_Handler();
 	}
+#endif
+	
 #if 0
 	ret = xTaskCreate(
 	  SPILCDTask,
@@ -214,9 +286,20 @@ void MX_FREERTOS_Init(void) {
 			"USBX_Core_Task",
 			512,
 			NULL,
-			configMAX_PRIORITIES - 2,
+			configMAX_PRIORITIES - 1,
 			NULL);
 
+#if 1
+	/* modbus从机实验 */
+		ret = xTaskCreate(
+			LibmodbusServer,
+			"libmobusServer",
+			200,
+			NULL,
+			configMAX_PRIORITIES - 1,
+			NULL
+		);
+#endif
 }
 
 void StartDefaultTask(void *argument)

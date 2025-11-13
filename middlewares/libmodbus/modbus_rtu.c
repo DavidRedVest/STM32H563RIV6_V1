@@ -219,6 +219,25 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
     }
 }
 
+static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx,
+                                              const uint8_t *req,
+                                              const uint8_t *rsp,
+                                              int rsp_length)
+{
+    /* Check responding slave is the slave we requested (except for broacast
+     * request) */
+    if (req[0] != rsp[0] && req[0] != MODBUS_BROADCAST_ADDRESS) {
+        if (ctx->debug) {
+            MODBUS_DEBUG("The responding slave %d isn't the requested slave %d\n",
+                    rsp[0],
+                    req[0]);
+        }
+        errno = EMBBADSLAVE;
+        return -1;
+    } else {
+        return 0;
+    }
+}
 
 static int _modbus_rtu_connect(modbus_t *ctx)
 {
@@ -233,7 +252,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
 static unsigned int _modbus_rtu_is_connected(modbus_t *ctx)
 {
-
+	/* 默认一直连接 */
     return 1;
 }
 
@@ -272,6 +291,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_receive,
     _modbus_rtu_recv,
     _modbus_rtu_check_integrity,
+    _modbus_rtu_pre_check_confirmation,
     _modbus_rtu_connect,
     _modbus_rtu_is_connected,
     _modbus_rtu_close,

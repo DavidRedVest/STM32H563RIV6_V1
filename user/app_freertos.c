@@ -16,8 +16,6 @@
 #include "osal_mem.h"
 #include "errno.h"
 
-static void StartDefaultTask(void *argument);
-//static void SPILCDTask(void *argument);
 
 extern void USBX_CDC_Task(void *argument);
 
@@ -31,6 +29,17 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
     (void)pcTaskName;
     while(1);
 }
+
+#if 0
+static void StartDefaultTask(void *argument)
+{
+	while(1)
+	{
+		bsp_led_toggle();
+		vTaskDelay(500);
+	}
+}
+#endif
 
 #if 0
 extern UX_SLAVE_CLASS_CDC_ACM *cdc_acm_instance;
@@ -133,6 +142,7 @@ static void USBX_Core_Task(void *argument)
 	}
 }
 
+#if 0
 static void LibmodbusServer(void *argument)
 {
 //	rt_kprintf("start 111 \r\n");
@@ -199,6 +209,49 @@ static void LibmodbusServer(void *argument)
 	modbus_free(ctx);
 	vTaskDelete(NULL);
 }
+#endif
+static void LibmodbusClient( void *pvParameters )	
+{
+	modbus_t *ctx;
+	int rc;
+	uint16_t val = 0;
+	int nb = 1;
+
+	ctx = modbus_new_rtu("usb", 115200, 'N', 8, 1);
+	modbus_set_slave(ctx, 1);
+
+	rc = modbus_connect(ctx);
+	if(-1 == rc) {
+		modbus_free(ctx);
+		vTaskDelete(NULL);
+	}
+
+
+	for(;;)
+	{
+		/* read hoding register 1 */
+		rc = modbus_read_registers(ctx, 1, nb, &val);
+
+		if (rc != nb)
+			continue;
+
+		/* display on lcd */
+		Draw_Number(0, 0, val, 0xff0000);
+
+		/* val ++ */
+		val++;
+
+		/* write val to hoding register 2 */
+		rc = modbus_write_registers(ctx, 2, nb, &val);
+
+	}
+	/* For RTU */
+	modbus_close(ctx);
+	modbus_free(ctx);
+
+	vTaskDelete(NULL);
+}
+
 
 void MX_FREERTOS_Init(void) {
 
@@ -288,8 +341,13 @@ void MX_FREERTOS_Init(void) {
 			NULL,
 			configMAX_PRIORITIES - 1,
 			NULL);
+		if (ret != pdPASS)
+		{
+			rt_kprintf("USBX_CDC_Task failed! \r\n");
+			Error_Handler();
+		}
 
-#if 1
+#if 0
 	/* modbus从机实验 */
 		ret = xTaskCreate(
 			LibmodbusServer,
@@ -300,16 +358,28 @@ void MX_FREERTOS_Init(void) {
 			NULL
 		);
 #endif
+
+#if 1
+	/* modbus主机实验 */
+		ret = xTaskCreate(
+			LibmodbusClient,
+			"LibmodbusClient",
+			300,
+			NULL,
+			configMAX_PRIORITIES - 1,
+			NULL
+		);
+		if (ret != pdPASS)
+		{
+			rt_kprintf("LibmodbusClient failed! \r\n");
+			Error_Handler();
+		}
+
+#endif
+
 }
 
-void StartDefaultTask(void *argument)
-{
-	while(1)
-	{
-		bsp_led_toggle();
-		vTaskDelay(500);
-	}
-}
+
 
 
 

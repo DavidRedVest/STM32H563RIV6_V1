@@ -180,6 +180,37 @@ int modbus_reply(modbus_t *ctx,
                  modbus_mapping_t *mb_mapping);
 
 
+int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
+
+int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
+
+int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
+
+int modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
+
+int modbus_write_bit(modbus_t *ctx, int addr, int status);
+
+int modbus_write_register(modbus_t *ctx, int addr, const uint16_t value);
+
+int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src);
+
+int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src);
+
+
+int modbus_mask_write_register(modbus_t *ctx,
+                               int addr,
+                               uint16_t and_mask,
+                               uint16_t or_mask);
+
+int modbus_write_and_read_registers(modbus_t *ctx,
+                                    int write_addr,
+                                    int write_nb,
+                                    const uint16_t *src,
+                                    int read_addr,
+                                    int read_nb,
+                                    uint16_t *dest);
+
+
 int modbus_set_slave(modbus_t *ctx, int slave);
 int modbus_receive(modbus_t *ctx, uint8_t *req);
 

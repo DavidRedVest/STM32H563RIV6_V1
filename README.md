@@ -37,3 +37,11 @@
 - 实现USB虚拟串口功能
 
 - 实现rt_kprintf绑定USB虚拟串口输出，不能发送单个字节，开始初始化会比较慢，最前面的输出会丢掉
+
+- 实现Modbus从站功能LibmodbusServer
+
+  通过读写0x01的bit0位控制板子上的LED小灯，运行程序，打开Modbus Poll软件，点击“Connection”连接，点击“Setup”选择 "Read/Write Definition",Slave ID设置为1，功能码选择"01 Read Coils(0x)"，创建完成之后，通过bit0位On/Off可以实现LED控制
+
+- 实现Modbus主站功能LibmodbusClient
+
+  先打开软件Modbus Slave，在运行程序，在软甲上选择“Connection”，然后点击“Setup”选择“Slave Definetion”选项，Slave ID设置1，功能码选择“03 Holding Register(4x)”，点击“OK”。实验时，选择bit1位，然后写入一个数值，bit2会显示bit1位+1的数值

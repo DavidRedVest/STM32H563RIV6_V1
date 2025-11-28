@@ -26,8 +26,8 @@ MODBUS_BEGIN_DECLS
 
 
 /* Timeouts in microsecond (0.5 s) */
-#define _RESPONSE_TIMEOUT 500000
-#define _BYTE_TIMEOUT     500000
+#define _RESPONSE_TIMEOUT 10000
+#define _BYTE_TIMEOUT     10000
 
 
 /* 定义打印函数 */

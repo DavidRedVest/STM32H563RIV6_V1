@@ -2,7 +2,7 @@
 #include "rtthread.h"
 //#include "uart.h"
 
-extern void myputstr(const char *str);
+//extern void myputstr(const char *str);
 
 /*************************************************************************MEMORY START*************************************************************************/
 /**
@@ -1146,7 +1146,7 @@ rt_weak void rt_hw_console_output(const char *str)
 {
     /* empty console output */
 
-    myputstr(str);
+   // myputstr(str);
 
 }
 

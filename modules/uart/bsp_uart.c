@@ -7,7 +7,7 @@
 #include "semphr.h"
 
 
-#define UART_RX_BUF_LEN (200)
+#define UART_RX_BUF_LEN (260)
 
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
@@ -458,10 +458,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 
 }
 
-#if 1
+#if 0
  /* 为了实现printf打印，需要实现一个myputstr函数 */
 static int myputchar(const char ch)
 {
+
 #if 0
 //UART2测试OK
 	while((USART2->ISR&0X40)==0);//循环发送,直到发送完毕   
@@ -477,16 +478,23 @@ static int myputchar(const char ch)
 
 void myputstr(const char *str)
 {
+#if 1
 	while(*str) {
 		//HAL_UART_Transmit(&huart1, (uint8_t *)str, 1, 0xFFFF);
 		myputchar(*str);
 		str++;
 	}
+#endif
+}
+
+void rt_hw_console_output(const char *str)
+{
+    /* empty console output */
+
+    myputstr(str);
 
 }
 #endif
-
-
 /*******************************************************************************************/
 //下面是封装串口的代码,需要和FreeRTOS做结合
 /*******************************************************************************************/

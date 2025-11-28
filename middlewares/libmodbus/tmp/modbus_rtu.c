@@ -247,6 +247,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
 	pdev->Init(pdev, ctx_rtu->baud, ctx_rtu->parity, ctx_rtu->data_bit, ctx_rtu->stop_bit);
 	
+    ctx->s = 1;
 	return 0;
 }
 
@@ -265,8 +266,11 @@ static void _modbus_rtu_close(modbus_t *ctx)
 
 static int _modbus_rtu_flush(modbus_t *ctx)
 {
+/* 使用usb/UART2/UART4的UART_Device来flush数据 */
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+	struct Dev_Mgmt *pdev = ctx_rtu->dev;
 
-	return 0;
+	return pdev->Flush(pdev);
 }
 
 static void _modbus_rtu_free(modbus_t *ctx)
@@ -308,6 +312,7 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
 
 	/* check device argument */
 	if( (NULL == device) || (0 == *device)) {
+        errno = EINVAL;
 		return NULL;
 	}
 
@@ -323,11 +328,13 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
 	if (!pdev)
 	{
 		modbus_free(ctx);
+        errno = ENOENT;
 		return NULL;
 	}
 
 	ctx->backend_data = (modbus_rtu_t *)osal_malloc(sizeof(modbus_rtu_t));
 	if(NULL == ctx->backend_data) {
+        errno = ENOMEM;
 		modbus_free(ctx);
 		return NULL;
 	}
@@ -336,6 +343,7 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
 
 	ctx_rtu->device = (char *)osal_malloc((strlen(device) + 1) * sizeof(char));
 	if(NULL == ctx_rtu->device) {
+        errno = ENOMEM;
 		modbus_free(ctx);
 		return NULL;
 	}
@@ -345,6 +353,7 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
 	if('N' == parity || 'E' == parity || 'O' == parity) {
 		ctx_rtu->parity = parity;
 	} else {
+        errno = EINVAL;
 		modbus_free(ctx);
 		return NULL;
 	}

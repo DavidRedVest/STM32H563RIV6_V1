@@ -53,8 +53,8 @@
 #define INCLUDE_xSemaphoreGetMutexHolder   1  
 
 #define configPRIO_BITS	__NVIC_PRIO_BITS
-#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY			15                      //中断最低优先级
-#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	5                       //系统可管理的最高中断优先级
+#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY			15                      //�?�?最低优先级
+#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	5                       //系统�?管理的最高中�?优先�?
 #define configKERNEL_INTERRUPT_PRIORITY 		( configLIBRARY_LOWEST_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY 	( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
 
@@ -220,7 +220,7 @@
  * system-wide implementations of the necessary stubs. Note that (at the time of
  * writing) the current newlib design implements a system-wide malloc() that must
  * be provided with locks. */
-#define configUSE_NEWLIB_REENTRANT                 0
+#define configUSE_NEWLIB_REENTRANT                0
 
 /******************************************************************************/
 /* Software timer related definitions. ****************************************/
